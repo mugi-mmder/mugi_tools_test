@@ -51,3 +51,11 @@ class VIEW3D_PT_3D_cursor_Panel_mugi(Panel):
         box_row.operator("view3d.snap_cursor_to_center", text = translat.pgettext("cursor_to_center"), icon = "ORIENTATION_GLOBAL")
         box_row.separator()
         box_row.operator(OBJECT_OT_cursor_to_XlocZero.bl_idname, text = "X = 0", icon = "CENTER_ONLY")
+
+        col = layout.column(align=True)
+        row = col.row(align=True)
+        row.label(text = "Pose_Reset2Item",icon = "OUTLINER_OB_ARMATURE")
+        row = col.row(align=True)
+        row.operator("pose.transforms_clear", text = translat.pgettext("Pose_Reset"), icon = "OUTLINER_OB_ARMATURE")
+
+

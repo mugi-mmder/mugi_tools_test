@@ -55,6 +55,8 @@ translation_dict = {
          ("*", "cursor_to_selected") : "3Dカーソル→選択物",
          ("*", "selected_to_cursor") : "選択物→3Dカーソル",
          ("*", "cursor_to_center") : "3Dカーソル→原点",
+         ("*", "Pose_Reset2Item") : "ポーズリセット(アイテム欄用)",
+         ("*", "Pose_Reset") : "ポーズリセット",
          #TEXTURE_PT_BrushPanel
          ("*", "Unified_Brush_setting") : "共通ペイントブラシ設定",
          ("*", "Unified_Brush_size") : "共通ブラシサイズ",
