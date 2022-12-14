@@ -21,6 +21,32 @@ class OBJECT_OT_cursor_to_XlocZero(bpy.types.Operator):
         bpy.context.scene.cursor.location[0] = 0
         return {'FINISHED'}
 
+class OBJECT_OT_PoseReset_OBJmode(bpy.types.Operator):
+    bl_idname = "object.pose_reset_objmode"
+    bl_label = "pose_reset_objmode"
+    bl_description = "あちこちでポーズリセット"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        if bpy.context.mode == 'OBJECT':            # objectモードで実行させるのでモード確認
+            if (bpy.context.active_object.type == 'ARMATURE'):
+                    return True
+
+
+    def execute(self, context):
+        bpy.ops.object.mode_set(mode='POSE', toggle = False)    # POSEモードにしてポーズリセット
+        bpy.ops.pose.select_all(action='SELECT')
+        bpy.ops.pose.transforms_clear()
+        bpy.ops.pose.select_all(action='DESELECT')
+        bpy.ops.object.mode_set(mode='OBJECT', toggle = False)  # OBJECTmodeに戻す
+
+        return {'FINISHED'}
+
+
+
+
+
 
 class VIEW3D_PT_3D_cursor_Panel_mugi(Panel):
     bl_space_type = "VIEW_3D"          # パネルを登録するスペース
@@ -56,6 +82,8 @@ class VIEW3D_PT_3D_cursor_Panel_mugi(Panel):
         row = col.row(align=True)
         row.label(text = "Pose_Reset2Item",icon = "OUTLINER_OB_ARMATURE")
         row = col.row(align=True)
-        row.operator("pose.transforms_clear", text = translat.pgettext("Pose_Reset"), icon = "OUTLINER_OB_ARMATURE")
+        row.operator("pose.transforms_clear", text = translat.pgettext("select_bone_Pose_Reset"), icon = "OUTLINER_OB_ARMATURE")
+        row = col.row(align=True)
+        row.operator(OBJECT_OT_PoseReset_OBJmode.bl_idname, text = translat.pgettext("Pose_Reset_OBJmode"), icon = "OUTLINER_OB_ARMATURE")
 
 

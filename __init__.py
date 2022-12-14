@@ -2,7 +2,7 @@
 import bpy
 from bpy.props import *
 from .OBJECT_OT_vertex_groups_weight import OBJECT_OT_vertex_groups_weight_round_the_weight,VIEW3D_PT_CustomPanel_mugi
-from .VIEW3D_PT_CustomPanel import VIEW3D_PT_3D_cursor_Panel_mugi,OBJECT_OT_cursor_to_XlocZero
+from .VIEW3D_PT_CustomPanel import VIEW3D_PT_3D_cursor_Panel_mugi,OBJECT_OT_cursor_to_XlocZero,OBJECT_OT_PoseReset_OBJmode
 from .TEXTURE_OT_BRUSH import TEXTURE_OT_BRUSHSize,TEXTURE_OT_BRUSHSize_Ajust,TEXTURE_PT_BrushPanel_mugi
 from .mmd_cm_trans import Prop_mmd_cm_trans_setting,OBJECT_OT_mmd_cm_trans_maxmin,VIEW3D_PT__mmd_cm_trans_mugi
 from .MESH_OT_change_vtxselect_shapekey import MESH_OT_change_vtxslct_shapekey,VIEW3D_PT_CustomPanel_mugi_change_vtx4skey
@@ -29,6 +29,7 @@ classes = (
 
     VIEW3D_PT_3D_cursor_Panel_mugi,
     OBJECT_OT_cursor_to_XlocZero,
+    OBJECT_OT_PoseReset_OBJmode,
 
     TEXTURE_OT_BRUSHSize,
     TEXTURE_OT_BRUSHSize_Ajust,
@@ -56,7 +57,8 @@ translation_dict = {
          ("*", "selected_to_cursor") : "選択物→3Dカーソル",
          ("*", "cursor_to_center") : "3Dカーソル→原点",
          ("*", "Pose_Reset2Item") : "ポーズリセット(アイテム欄用)",
-         ("*", "Pose_Reset") : "ポーズリセット",
+         ("*", "select_bone_Pose_Reset") : "選択ボーンのポーズリセット",
+         ("*", "Pose_Reset_OBJmode") : "ポーズリセット(OBJモード用)",
          #TEXTURE_PT_BrushPanel
          ("*", "Unified_Brush_setting") : "共通ペイントブラシ設定",
          ("*", "Unified_Brush_size") : "共通ブラシサイズ",
