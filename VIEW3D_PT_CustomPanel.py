@@ -52,7 +52,7 @@ class VIEW3D_PT_3D_cursor_Panel_mugi(Panel):
     bl_space_type = "VIEW_3D"          # パネルを登録するスペース
     bl_region_type = "UI"              # パネルを登録するリージョン
     bl_category = "Item"               # パネルを登録するタブ名
-    bl_label = "3D_cursor_Item"             # パネルのヘッダに表示される文字列
+    bl_label = "little＿shortcut"             # パネルのヘッダに表示される文字列
     bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod

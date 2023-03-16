@@ -6,7 +6,7 @@ from .VIEW3D_PT_CustomPanel import VIEW3D_PT_3D_cursor_Panel_mugi,OBJECT_OT_curs
 from .TEXTURE_OT_BRUSH import TEXTURE_OT_BRUSHSize,TEXTURE_OT_BRUSHSize_Ajust,TEXTURE_PT_BrushPanel_mugi
 from .mmd_cm_trans import Prop_mmd_cm_trans_setting,OBJECT_OT_mmd_cm_trans_maxmin,VIEW3D_PT__mmd_cm_trans_mugi
 from .MESH_OT_change_vtxselect_shapekey import MESH_OT_change_vtxslct_shapekey,VIEW3D_PT_CustomPanel_mugi_change_vtx4skey
-
+from .OBJECT_OT_vertex_groups_remove0 import OBJECT_OT_vertex_groups_weightZero_remove,VIEW3D_PT_CustomPanel_mugi_weightZero_remove
 
 bl_info = {
     "name": "test mugiTOOLs",
@@ -42,6 +42,9 @@ classes = (
     MESH_OT_change_vtxslct_shapekey,
     VIEW3D_PT_CustomPanel_mugi_change_vtx4skey,
 
+    OBJECT_OT_vertex_groups_weightZero_remove,
+    VIEW3D_PT_CustomPanel_mugi_weightZero_remove,
+
      )
 
 # 翻訳用辞書
@@ -52,7 +55,7 @@ translation_dict = {
          ("*", "clean_weights") : "値以下のｳｪｲﾄ削除",
          ("*", "Round_weights_of_selected_objects") : "選択オブジェクトのウェイト丸め＆正規化",
          #VIEW3D_PT_CustomPanel
-         ("*", "3D_cursor_Item") : "3Dカーソル(アイテム欄用)",
+         ("*", "little＿shortcut") : "ちょっとしたショトカ",
          ("*", "cursor_to_selected") : "3Dカーソル→選択物",
          ("*", "selected_to_cursor") : "選択物→3Dカーソル",
          ("*", "cursor_to_center") : "3Dカーソル→原点",
@@ -77,7 +80,8 @@ translation_dict = {
          #MESH_OT_change_vtxselect_shapekey
          ("*", "change_vtx4skey_select") : "選択ｼｪｲﾌﾟｷｰの変更頂点選択",
          ("*", "change_vertex_selection") : "変更頂点選択",
-
+         #OBJECT_OT_vertex_groups_weight0_remove
+         ("*", "weightZero_remove") : "ウェイトなし頂点ｸﾞﾙｰﾌﾟ削除",
         },
 }
 
