@@ -3,6 +3,7 @@ import bpy
 
 from bpy.types import Panel, UIList
 from bpy.props import *
+import time
 
 
 translat = bpy.app.translations
@@ -103,10 +104,35 @@ class OBJECT_OT_vertex_groups_weightZero_remove(bpy.types.Operator):
                             pass
                     else:                                                  # 正常終了時の処理
                         print("   ===",vg.name,"はウェイト0===")
+                print("+++LRlist+++\n",LRlist) 
+                #print("+++remlis_name+++\n",remlis_name)
+
+                remsub = []                                        # for内でリスト直いじりすると処理不具合（内部index飛ばし）が発生するので移し替え
+                for vgin in remlist:                               # A-list　＝　B-list だと処理不具合を回避できなかったのでアペンドで移し替え     
+                    remsub.append(vgin)     
+
+
+                # for n in remlist:
+                #     print(n.name)
+                
+
+                i = 0
+
+                for vgLR in remsub:
+                    print("vgLR.name---->",vgLR.name)
+                    i += 1
                     
-                for vgLR in remlist:
+
+                    #"""
                     if vgLR.name[0:-2] in LRlist:                          #　左右判定checkに引っかかった頂点グループは左右とも削除リストから除外
+                        print(vgLR.name[0:-2],"//",vgLR.name[0:-2] in LRlist)
                         remlist.remove(vgLR)
+                    else:
+                        print("pass")
+
+                    #"""
+                    print(i)
+                    
                 infoVG = len(remlist)
                 if infoVG > 0:
                     for remVG in remlist:                                  #　残った頂点グループを削除
@@ -121,6 +147,7 @@ class OBJECT_OT_vertex_groups_weightZero_remove(bpy.types.Operator):
                 remlist.clear()     
                 remlis_name.clear()  
                 LRlist.clear()
+                remsub.clear()
 
 
         else:
