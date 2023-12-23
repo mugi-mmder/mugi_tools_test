@@ -16,7 +16,7 @@ bl_info = {
     "location": "VIEW3D > Sidebar",
     "description": "実験用のむぎの遊び場.",
     "warning": "",
-    "support": "TESTING",
+    "support": "COMMUNITY",
     "wiki_url": "",
     "tracker_url": "",
     "category": "User Interface"
