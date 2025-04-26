@@ -63,6 +63,12 @@ class OBJECT_OT_vertex_groups_weight_round_the_weight(bpy.types.Operator):
                 print("test--->",listobj.name)
                 bpy.context.view_layer.objects.active = listobj     #　リストから一個ずつメッシュオブジェクトを選択
 
+                has_armature = any(mod.type == 'ARMATURE' for mod in obj.modifiers)
+                if not has_armature:
+                    self.report({'INFO'}, "アーマチュアモディファイアが付いていません")
+                    return {'CANCELLED'}
+                
+
                 bpy.ops.object.mode_set(mode='EDIT', toggle = False)  #　EDITmodeにはいって全頂点選択
                 bpy.ops.mesh.select_all(action='SELECT')
                 bpy.ops.object.mode_set(mode='OBJECT', toggle = False)
@@ -111,7 +117,7 @@ class OBJECT_OT_vertex_groups_weight_round_the_weight(bpy.types.Operator):
                         i == round(i,2)                                                 
                         def_i = 1 - i
                         # print((abs(def_i) < 0.001), " TOTAL == ", i,"difference== ",def_i)
-                        if (abs(def_i) > 0.001):                                            # 合計が1±0.001以内かcheck（内部的に微小端数は出る）
+                        if (abs(def_i) > 0.001) and (v_ind in vm_vert[bm_Df_Lay]):                                            # 合計が1±0.001以内かcheck（内部的に微小端数は出る）
                            vm_vert[bm_Df_Lay][v_ind] =(vm_vert[bm_Df_Lay][v_ind] + def_i)   # 1じゃないなら最後にチェックしたボーンに誤差分吸収
 
                 ctrl_bmsh.to_mesh(obj.data)
