@@ -113,6 +113,7 @@ class OBJECT_OT_vertex_groups_weight_round_the_weight(bpy.types.Operator):
                         # print("vm_vert---->",vm_vert)
                         # print("vm_vert[bm_Df_Lay].items()---->","len=",len(vm_vert[bm_Df_Lay].items()),"bm_Df_Lay:",bm_Df_Lay,"item:",vm_vert[bm_Df_Lay].items())
                         i = 0
+                        last_v_ind = None  # 最後に見たv_indを記録
                         for v_ind, v_wieht in vm_vert[bm_Df_Lay].items():   
                             # print("v_ind---->",v_ind,"    v_wieht---->",v_wieht)      
                             if obj.vertex_groups[v_ind].name in prt_bones:                # 選択中の頂点ウェイト（変形）取得する
@@ -122,12 +123,13 @@ class OBJECT_OT_vertex_groups_weight_round_the_weight(bpy.types.Operator):
                                 quan = Decimal(str(v_wieht)).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
                                 vm_vert[bm_Df_Lay][v_ind] = float(quan)
                                 i = i + vm_vert[bm_Df_Lay][v_ind]                         # 丸め時切り捨て、切り上げで1じゃなくなってないかcheck用
+                                last_v_ind = v_ind                                        # ここで記録
                                 # print(obj.vertex_groups[v_ind].name,"Weight==",vm_vert[bm_Df_Lay][v_ind])
                         i == round(i,2)                                                 
                         def_i = 1 - i
                         # print((abs(def_i) < 0.001), " TOTAL == ", i,"difference== ",def_i)
-                        if (abs(def_i) > 0.001) and (v_ind in vm_vert[bm_Df_Lay]):                                            # 合計が1±0.001以内かcheck（内部的に微小端数は出る）
-                           vm_vert[bm_Df_Lay][v_ind] =(vm_vert[bm_Df_Lay][v_ind] + def_i)   # 1じゃないなら最後にチェックしたボーンに誤差分吸収
+                        if (abs(def_i) > 0.001) and (last_v_ind is not None) and (last_v_ind in vm_vert[bm_Df_Lay]):   # 合計が1±0.001以内かcheck（内部的に微小端数は出る）
+                           vm_vert[bm_Df_Lay][last_v_ind] = (vm_vert[bm_Df_Lay][last_v_ind] + def_i)     # 1じゃないなら最後にチェックしたボーンに誤差分吸収
 
                 ctrl_bmsh.to_mesh(obj.data)
                 #print("ctrl_bmsh--->",ctrl_bmsh)
