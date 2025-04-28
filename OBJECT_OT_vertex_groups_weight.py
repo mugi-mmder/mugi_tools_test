@@ -85,16 +85,23 @@ class OBJECT_OT_vertex_groups_weight_round_the_weight(bpy.types.Operator):
  
 
                 #ごみｳｪｲﾄｸﾘｰﾝ -> ｳｪｲﾄ数4制限 -> 再度ｸﾘｰﾝ -> 変形ｳｪｲﾄのみ正規化 -> 0.01単位で量子化 -> 再度正規化(微小端数) -> 0.01単位で量子化
-
-                bpy.ops.object.vertex_group_clean(group_select_mode='BONE_DEFORM',                  # 指定値以下の変形ウェイトをクリーン
+                try:
+                  bpy.ops.object.vertex_group_clean(group_select_mode='BONE_DEFORM',                  # 指定値以下の変形ウェイトをクリーン
                                                     limit = self.limit, keep_single=True)
+                except TypeError as e:        # エラーメッセージをチェックして適切な情報を表示
+                       if "enum \"BONE_DEFORM\" not found" in str(e):
+                            self.report({'INFO'}, "なんかエラー。もっかい試してみて")
+                            return {'CANCELLED'}
+                       else:
+                            # その他のTypeErrorの場合は再発生させる
+                         raise e  
                 bpy.ops.object.vertex_group_limit_total(group_select_mode='BONE_DEFORM', limit = 4)   # 変形ウェイトを4つに制限
-                bpy.ops.object.vertex_group_clean(group_select_mode='BONE_DEFORM',                  # 指定値以下の変形ウェイトをクリーン
+                bpy.ops.object.vertex_group_clean(group_select_mode='BONE_DEFORM',                    # 指定値以下の変形ウェイトをクリーン
                                                     limit = self.limit, keep_single=True)             
                 bpy.ops.object.vertex_group_quantize(group_select_mode='BONE_DEFORM', steps = 100)    # 0.01単位で量子化
                 bpy.ops.object.vertex_group_normalize_all(group_select_mode='BONE_DEFORM',
-                                                                lock_active=False)  # 変形ウェイトの正規化,ｱｸﾃｨﾌﾞﾛｯｸは掛けない
-                bpy.ops.object.vertex_group_clean(group_select_mode='BONE_DEFORM',                  # 一回目で端数がでる場合があるので二回目突入
+                                                                lock_active=False)                    # 変形ウェイトの正規化,ｱｸﾃｨﾌﾞﾛｯｸは掛けない
+                bpy.ops.object.vertex_group_clean(group_select_mode='BONE_DEFORM',                    # 一回目で端数がでる場合があるので二回目突入
                                                     limit = self.limit, keep_single=True)
                 bpy.ops.object.vertex_group_quantize(group_select_mode='BONE_DEFORM', steps = 100)    # 正規化時に微小端数がでるのを利用して整える
 
