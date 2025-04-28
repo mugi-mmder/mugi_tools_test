@@ -9,6 +9,15 @@ from decimal import Decimal, ROUND_HALF_UP, ROUND_HALF_EVEN
 translat = bpy.app.translations
 
 
+def get_armature_parent(obj):
+    """オブジェクトの親チェーンをたどり、アーマチュアオブジェクトを返す。"""
+    parent = obj.parent
+    while parent:
+        if parent.type == 'ARMATURE':
+            return parent
+        parent = parent.parent
+    return None
+
 class OBJECT_OT_vertex_groups_weight_round_the_weight(bpy.types.Operator):
     bl_idname = "object.vertex_groups_round_the_weight_mugitest"
     bl_label = "round_the_weight"
