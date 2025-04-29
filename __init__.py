@@ -1,6 +1,7 @@
 # Copyright (c) 2022 mugi
 import bpy
 from bpy.props import *
+
 import urllib.request
 import os
 import zipfile
@@ -30,15 +31,6 @@ bl_info = {
 
 
 
-def get_remote_version():
-    try:
-        with urllib.request.urlopen("https://raw.githubusercontent.com/mugi-mmder/mugi_tools_test/main/version.txt") as response:
-            version_str = response.read().decode("utf-8").strip()
-            return tuple(map(int, version_str.split(".")))
-    except Exception as e:
-        print(f"バージョン取得に失敗: {e}")
-        return None
-
 
 class MUGI_OT_UpdateAddon(bpy.types.Operator):
     bl_idname = "mugi.update_addon"
@@ -46,23 +38,12 @@ class MUGI_OT_UpdateAddon(bpy.types.Operator):
     bl_description = "GitHub から最新版をダウンロードして更新します"
 
     def execute(self, context):
-        remote_ver = get_remote_version()
-        current_ver = bl_info["version"]
-
-        if remote_ver is None:
-            self.report({'ERROR'}, "リモートのバージョン情報を取得できませんでした")
-            return {'CANCELLED'}
-
-        if remote_ver <= current_ver:
-            self.report({'INFO'}, f"最新版です（{current_ver}）")
-            return {'CANCELLED'}
+        url = "https://github.com/mugi-mmder/mugi_tools_test/archive/refs/heads/main.zip"
+        addon_folder = os.path.join(bpy.utils.user_resource('SCRIPTS'), "addons")
+        zip_path = os.path.join(addon_folder, "mugi_tools_test_update.zip")
 
         try:
-            self.report({'INFO'}, f"更新を開始します: {current_ver} → {remote_ver}")
-            url = "https://github.com/mugi-mmder/mugi_tools_test/archive/refs/heads/main.zip"
-            addon_folder = os.path.join(bpy.utils.user_resource('SCRIPTS'), "addons")
-            zip_path = os.path.join(addon_folder, "mugi_tools_test_update.zip")
-
+            self.report({'INFO'}, "アドオンをダウンロード中...")
             urllib.request.urlretrieve(url, zip_path)
 
             with zipfile.ZipFile(zip_path, 'r') as zip_ref:
@@ -74,8 +55,8 @@ class MUGI_OT_UpdateAddon(bpy.types.Operator):
 
             extracted_path = os.path.join(addon_folder, "mugi_tools_test-main")
             os.rename(extracted_path, old_path)
-            os.remove(zip_path)
 
+            os.remove(zip_path)
             self.report({'INFO'}, "更新完了！Blenderを再起動してください。")
         except Exception as e:
             self.report({'ERROR'}, f"更新に失敗しました: {e}")
@@ -89,9 +70,8 @@ class MUGI_AddonPreferences(bpy.types.AddonPreferences):
 
     def draw(self, context):
         layout = self.layout
-        layout.label(text=f"現在のバージョン: {bl_info['version']}")
+        layout.label(text="Mugi Tools アップデーター")
         layout.operator("mugi.update_addon", icon="FILE_REFRESH")
-
 
 
 
