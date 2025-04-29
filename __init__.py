@@ -1,6 +1,12 @@
 # Copyright (c) 2022 mugi
 import bpy
 from bpy.props import *
+import urllib.request
+import os
+import zipfile
+import shutil
+
+
 from .OBJECT_OT_vertex_groups_weight import OBJECT_OT_vertex_groups_weight_round_the_weight,VIEW3D_PT_CustomPanel_mugi
 from .VIEW3D_PT_CustomPanel import VIEW3D_PT_3D_cursor_Panel_mugi,OBJECT_OT_cursor_to_XlocZero,OBJECT_OT_PoseReset_OBJmode
 from .TEXTURE_OT_BRUSH import TEXTURE_OT_BRUSHSize,TEXTURE_OT_BRUSHSize_Ajust,TEXTURE_PT_BrushPanel_mugi
@@ -11,7 +17,7 @@ from .OBJECT_OT_vertex_groups_remove0 import OBJECT_OT_vertex_groups_weightZero_
 bl_info = {
     "name": "test mugiTOOLs",
     "author": "mugi",
-    "version": (1, 0),
+    "version": (1, 1),
     "blender": (3, 1, 0),
     "location": "VIEW3D > Sidebar",
     "description": "実験用のむぎの遊び場.",
@@ -21,6 +27,73 @@ bl_info = {
     "tracker_url": "",
     "category": "User Interface"
 }
+
+
+
+def get_remote_version():
+    try:
+        with urllib.request.urlopen("https://raw.githubusercontent.com/mugi-mmder/mugi_tools_test/main/version.txt") as response:
+            version_str = response.read().decode("utf-8").strip()
+            return tuple(map(int, version_str.split(".")))
+    except Exception as e:
+        print(f"バージョン取得に失敗: {e}")
+        return None
+
+
+class MUGI_OT_UpdateAddon(bpy.types.Operator):
+    bl_idname = "mugi.update_addon"
+    bl_label = "Mugi Tools を更新"
+    bl_description = "GitHub から最新版をダウンロードして更新します"
+
+    def execute(self, context):
+        remote_ver = get_remote_version()
+        current_ver = bl_info["version"]
+
+        if remote_ver is None:
+            self.report({'ERROR'}, "リモートのバージョン情報を取得できませんでした")
+            return {'CANCELLED'}
+
+        if remote_ver <= current_ver:
+            self.report({'INFO'}, f"最新版です（{current_ver}）")
+            return {'CANCELLED'}
+
+        try:
+            self.report({'INFO'}, f"更新を開始します: {current_ver} → {remote_ver}")
+            url = "https://github.com/mugi-mmder/mugi_tools_test/archive/refs/heads/main.zip"
+            addon_folder = os.path.join(bpy.utils.user_resource('SCRIPTS'), "addons")
+            zip_path = os.path.join(addon_folder, "mugi_tools_test_update.zip")
+
+            urllib.request.urlretrieve(url, zip_path)
+
+            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                zip_ref.extractall(addon_folder)
+
+            old_path = os.path.join(addon_folder, "mugi_tools_test")
+            if os.path.exists(old_path):
+                shutil.rmtree(old_path)
+
+            extracted_path = os.path.join(addon_folder, "mugi_tools_test-main")
+            os.rename(extracted_path, old_path)
+            os.remove(zip_path)
+
+            self.report({'INFO'}, "更新完了！Blenderを再起動してください。")
+        except Exception as e:
+            self.report({'ERROR'}, f"更新に失敗しました: {e}")
+            return {'CANCELLED'}
+
+        return {'FINISHED'}
+
+
+class MUGI_AddonPreferences(bpy.types.AddonPreferences):
+    bl_idname = __name__
+
+    def draw(self, context):
+        layout = self.layout
+        layout.label(text=f"現在のバージョン: {bl_info['version']}")
+        layout.operator("mugi.update_addon", icon="FILE_REFRESH")
+
+
+
 
 classes = (
     # コレクションクラスのインポートの順番に注意
@@ -44,6 +117,8 @@ classes = (
 
     OBJECT_OT_vertex_groups_weightZero_remove,
     VIEW3D_PT_CustomPanel_mugi_weightZero_remove,
+    MUGI_OT_UpdateAddon,
+    MUGI_AddonPreferences,
 
      )
 
