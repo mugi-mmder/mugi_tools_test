@@ -2,11 +2,12 @@
 import bpy
 from bpy.props import *
 
-import urllib.request
 import os
+import urllib.request
 import zipfile
 import shutil
-
+from bpy.types import AddonPreferences, Operator
+from bpy.props import StringProperty
 
 from .OBJECT_OT_vertex_groups_weight import OBJECT_OT_vertex_groups_weight_round_the_weight,VIEW3D_PT_CustomPanel_mugi
 from .VIEW3D_PT_CustomPanel import VIEW3D_PT_3D_cursor_Panel_mugi,OBJECT_OT_cursor_to_XlocZero,OBJECT_OT_PoseReset_OBJmode
@@ -32,46 +33,72 @@ bl_info = {
 
 
 
-class MUGI_OT_UpdateAddon(bpy.types.Operator):
-    bl_idname = "mugi.update_addon"
-    bl_label = "Mugi Tools を更新"
-    bl_description = "GitHub から最新版をダウンロードして更新します"
 
+# GitHubリポジトリのZIP URL（mainブランチ）
+GITHUB_ZIP_URL = "https://github.com/mugi-mmder/mugi_tools_test/archive/refs/heads/main.zip"
+ADDON_FOLDER_NAME = "mugi_tools_test-main"
+
+# モジュールのインポート（必要なモジュールを追記）
+from . import VIEW3D_PT_CustomPanel
+from . import OBJECT_OT_vertex_groups_weight
+
+# -------------------- 更新処理 --------------------
+
+class MUGI_OT_UpdateAddon(Operator):
+    bl_idname = "mugi.update_addon"
+    bl_label = "アドオンを更新"
+    bl_description = "GitHubから最新版をダウンロードして上書きします"
+    
     def execute(self, context):
-        url = "https://github.com/mugi-mmder/mugi_tools_test/archive/refs/heads/main.zip"
-        addon_folder = os.path.join(bpy.utils.user_resource('SCRIPTS'), "addons")
-        zip_path = os.path.join(addon_folder, "mugi_tools_test_update.zip")
+        addon_path = bpy.utils.user_resource('SCRIPTS') + "/addons"
+        zip_path = os.path.join(addon_path, "mugi_tools_latest.zip")
 
         try:
-            self.report({'INFO'}, "アドオンをダウンロード中...")
-            urllib.request.urlretrieve(url, zip_path)
+            # ZIPをダウンロード
+            urllib.request.urlretrieve(GITHUB_ZIP_URL, zip_path)
 
+            # 一時展開フォルダ
+            temp_dir = os.path.join(addon_path, "temp_mugi")
+            if os.path.exists(temp_dir):
+                shutil.rmtree(temp_dir)
+            os.makedirs(temp_dir)
+
+            # 解凍
             with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                zip_ref.extractall(addon_folder)
+                zip_ref.extractall(temp_dir)
 
-            old_path = os.path.join(addon_folder, "mugi_tools_test")
-            if os.path.exists(old_path):
-                shutil.rmtree(old_path)
+            # 古いアドオン削除
+            old_addon = os.path.join(addon_path, ADDON_FOLDER_NAME)
+            if os.path.exists(old_addon):
+                shutil.rmtree(old_addon)
 
-            extracted_path = os.path.join(addon_folder, "mugi_tools_test-main")
-            os.rename(extracted_path, old_path)
+            # 解凍したアドオンを移動
+            extracted_folder = os.path.join(temp_dir, ADDON_FOLDER_NAME)
+            shutil.move(extracted_folder, old_addon)
 
+            # 後片付け
             os.remove(zip_path)
-            self.report({'INFO'}, "更新完了！Blenderを再起動してください。")
+            shutil.rmtree(temp_dir)
+
+            self.report({'INFO'}, "更新完了しました。再起動してください。")
+            return {'FINISHED'}
+
         except Exception as e:
-            self.report({'ERROR'}, f"更新に失敗しました: {e}")
+            self.report({'ERROR'}, f"更新失敗: {str(e)}")
             return {'CANCELLED'}
 
-        return {'FINISHED'}
+# -------------------- プリファレンス --------------------
 
-
-class MUGI_AddonPreferences(bpy.types.AddonPreferences):
+class MUGI_AddonPreferences(AddonPreferences):
     bl_idname = __name__
 
     def draw(self, context):
         layout = self.layout
-        layout.label(text="Mugi Tools アップデーター")
+        layout.label(text="GitHubからアドオンを自動更新できます。")
         layout.operator("mugi.update_addon", icon="FILE_REFRESH")
+
+
+
 
 
 
