@@ -47,7 +47,7 @@ class TEXTURE_OT_BRUSHSize_Ajust(bpy.types.Operator):
 
 
 class TEXTURE_PT_BrushPanel_mugi(View3DPaintPanel,Panel):
-    bl_context = ".imagepaint"  
+    bl_context = "imagepaint"  
     bl_label = "Unified_Brush_setting"
     bl_options = {'DEFAULT_CLOSED'}
     """
