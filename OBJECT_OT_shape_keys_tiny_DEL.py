@@ -12,7 +12,7 @@ class OBJECT_OT_remove_tiny_shape_keys(bpy.types.Operator):
     bl_label = "Remove Tiny Shape Keys"
     bl_options = {'REGISTER', 'UNDO'}
 
-    threshold: bpy.props.FloatProperty(name="Threshold",default=0.0001,min=0.0,max = 0.01,step = 1,
+    threshold: bpy.props.FloatProperty(name="Threshold",default=0.001,min=0.0,max = 0.1,step = 1,
                                        description="Threshold" )
 
 
