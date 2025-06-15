@@ -15,8 +15,8 @@ from .TEXTURE_OT_BRUSH import TEXTURE_OT_BRUSHSize,TEXTURE_OT_BRUSHSize_Ajust,TE
 from .mmd_cm_trans import Prop_mmd_cm_trans_setting,OBJECT_OT_mmd_cm_trans_maxmin,VIEW3D_PT__mmd_cm_trans_mugi
 from .MESH_OT_change_vtxselect_shapekey import MESH_OT_change_vtxslct_shapekey,VIEW3D_PT_CustomPanel_mugi_change_vtx4skey
 from .OBJECT_OT_vertex_groups_remove0 import OBJECT_OT_vertex_groups_weightZero_remove,VIEW3D_PT_CustomPanel_mugi_weightZero_remove
-from .OBJECT_OT_shape_keys_tiny_DEL import OBJECT_OT_remove_tiny_shape_keys,VIEW3D_PT_CustomPanel_mugi_tiny_shape_key
-
+from .OBJECT_OT_shape_keys_tiny_DEL import OBJECT_OT_remove_tiny_shape_keys,OBJECT_OT_clean_and_fix_mirror_X0,\
+                                            VIEW3D_PT_CustomPanel_mugi_tiny_shape_key
 
 bl_info = {
     "name": "test mugiTOOLs",
@@ -128,7 +128,9 @@ classes = (
     VIEW3D_PT_CustomPanel_mugi_weightZero_remove,
 
     OBJECT_OT_remove_tiny_shape_keys,
+    OBJECT_OT_clean_and_fix_mirror_X0,
     VIEW3D_PT_CustomPanel_mugi_tiny_shape_key,
+
 
     MUGI_OT_UpdateAddon,
     MUGI_AddonPreferences,
@@ -174,7 +176,10 @@ translation_dict = {
          #OBJECT_OT_vertex_groups_weight0_remove
          ("*", "weightZero_remove") : "ウェイトなし頂点ｸﾞﾙｰﾌﾟ削除",
          #OBJECT_OT_shape_keys_tiny_DEL
+         ("*", "Finishing Shape Keys") : "ｼｪｲﾌﾟｷｰ仕上げ機能",
          ("*", "tiny_shape_key_DELL") : "微小移動ｼｪｲﾌﾟｷｰ頂点削除",
+         ("*", "shape_key_X0") : "X=0強制",
+         
 
         },
 }
