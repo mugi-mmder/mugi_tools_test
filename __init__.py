@@ -8,6 +8,7 @@ import zipfile
 import shutil
 from bpy.types import AddonPreferences, Operator
 from bpy.props import StringProperty
+from bpy.app.translations import pgettext
 
 from .OBJECT_OT_vertex_groups_weight import OBJECT_OT_vertex_groups_weight_round_the_weight,VIEW3D_PT_CustomPanel_mugi
 from .VIEW3D_PT_CustomPanel import VIEW3D_PT_3D_cursor_Panel_mugi,OBJECT_OT_cursor_to_XlocZero,OBJECT_OT_PoseReset_OBJmode
@@ -17,11 +18,13 @@ from .MESH_OT_change_vtxselect_shapekey import MESH_OT_change_vtxslct_shapekey,V
 from .OBJECT_OT_vertex_groups_remove0 import OBJECT_OT_vertex_groups_weightZero_remove,VIEW3D_PT_CustomPanel_mugi_weightZero_remove
 from .OBJECT_OT_shape_keys_tiny_DEL import OBJECT_OT_remove_tiny_shape_keys,OBJECT_OT_clean_and_fix_mirror_X0,\
                                             VIEW3D_PT_CustomPanel_mugi_tiny_shape_key
+from .oji_Shape_Key_ST_Copy import OBJECT_OT_copy_shape_key_structure
+
 
 bl_info = {
     "name": "test mugiTOOLs",
     "author": "mugi",
-    "version": (1, 1),
+    "version": (1, 1.1),
     "blender": (3, 1, 0),
     "location": "VIEW3D > Sidebar",
     "description": "実験用のむぎの遊び場.",
@@ -131,6 +134,7 @@ classes = (
     OBJECT_OT_clean_and_fix_mirror_X0,
     VIEW3D_PT_CustomPanel_mugi_tiny_shape_key,
 
+    OBJECT_OT_copy_shape_key_structure,
 
     MUGI_OT_UpdateAddon,
     MUGI_AddonPreferences,
@@ -179,7 +183,8 @@ translation_dict = {
          ("*", "Finishing Shape Keys") : "ｼｪｲﾌﾟｷｰ仕上げ機能",
          ("*", "tiny_shape_key_DELL") : "微小移動ｼｪｲﾌﾟｷｰ頂点削除",
          ("*", "shape_key_X0") : "X=0強制",
-         
+         #shape_key_copy
+         ("*", "Copy Shape Key Structure") : "シェイプキー構造コピー",
 
         },
 }
@@ -190,13 +195,23 @@ def register():
     bpy.app.translations.register(__name__, translation_dict)   # 辞書の登録
     bpy.types.Scene.cm_props_setting = bpy.props.PointerProperty(type=Prop_mmd_cm_trans_setting) # mmd_cm_trans
 
+    # Shape Key Copy のメニュー登録
+    bpy.types.MESH_MT_shape_key_context_menu.append(shape_key_menu_func)
 
 
 def unregister():
+    # Shape Key Copy のメニュー削除
+    bpy.types.MESH_MT_shape_key_context_menu.remove(shape_key_menu_func)
+    
     del bpy.types.Scene.cm_props_setting        # mmd_cm_trans
     bpy.app.translations.unregister(__name__)   # 辞書の削除
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
+
+def shape_key_menu_func(self, context):
+    """シェイプキーのスペシャルメニューに追加する関数"""
+    self.layout.operator(OBJECT_OT_copy_shape_key_structure.bl_idname,
+        text=pgettext("Copy Shape Key Structure"), icon="COPYDOWN" )
 
 
 if __name__ == "__main__":
