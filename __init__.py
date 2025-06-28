@@ -19,6 +19,7 @@ from .OBJECT_OT_vertex_groups_remove0 import OBJECT_OT_vertex_groups_weightZero_
 from .OBJECT_OT_shape_keys_tiny_DEL import OBJECT_OT_remove_tiny_shape_keys,OBJECT_OT_clean_and_fix_mirror_X0,\
                                             VIEW3D_PT_CustomPanel_mugi_tiny_shape_key
 from .oji_Shape_Key_ST_Copy import OBJECT_OT_copy_shape_key_structure
+from .OBJECT_OT_mugi_Bonei import OBJECT_OT_align_bones_line,OBJECT_OT_rename_multiple_chains_padded,VIEW3D_PT_CustomPanel_mugi_Bone_Panel
 
 
 bl_info = {
@@ -139,8 +140,9 @@ classes = (
     MUGI_OT_UpdateAddon,
     MUGI_AddonPreferences,
 
-
-
+    OBJECT_OT_align_bones_line,
+    OBJECT_OT_rename_multiple_chains_padded,
+    VIEW3D_PT_CustomPanel_mugi_Bone_Panel
 
      )
 
@@ -185,6 +187,12 @@ translation_dict = {
          ("*", "shape_key_X0") : "X=0強制",
          #shape_key_copy
          ("*", "Copy Shape Key Structure") : "シェイプキー構造コピー",
+         #mugi_Bone
+         ("*", "Align_selected_bones") : "選択ボーン整列",
+         ("*", "bones_line") : "ボーン整列",
+         ("*", "Rename_at_the_top_bone") : "先頭ボーンで改名",
+         ("*", "bones_rename") : "リネーム",
+        
 
         },
 }
