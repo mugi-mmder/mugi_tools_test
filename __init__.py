@@ -19,7 +19,7 @@ from .OBJECT_OT_vertex_groups_remove0 import OBJECT_OT_vertex_groups_weightZero_
 from .OBJECT_OT_shape_keys_tiny_DEL import OBJECT_OT_remove_tiny_shape_keys,OBJECT_OT_clean_and_fix_mirror_X0,\
                                             VIEW3D_PT_CustomPanel_mugi_tiny_shape_key
 from .oji_Shape_Key_ST_Copy import OBJECT_OT_copy_shape_key_structure
-from .OBJECT_OT_mugi_Bonei import OBJECT_OT_align_bones_line,OBJECT_OT_rename_multiple_chains_padded,VIEW3D_PT_CustomPanel_mugi_Bone_Panel
+from .OBJECT_OT_mugi_Bone import OBJECT_OT_align_bones_line,OBJECT_OT_rename_multiple_chains_padded,VIEW3D_PT_CustomPanel_mugi_Bone_Panel
 
 
 bl_info = {
