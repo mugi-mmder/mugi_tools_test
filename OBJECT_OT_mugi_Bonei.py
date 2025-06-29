@@ -116,7 +116,7 @@ class OBJECT_OT_align_bones_line(bpy.types.Operator):
     
 
 class OBJECT_OT_rename_multiple_chains_padded(bpy.types.Operator):
-    """選択された接続チェーンを列ごとに連番リネーム（桁数自動・VGも更新）"""
+    """選択された接続チェーンを列ごとに連番リネーム（メッシュ→アーマチュア順でVGも更新）"""
     bl_idname = "armature.rename_multiple_chains_padded"
     bl_label = "接続チェーン連番リネーム（0埋め）"
     bl_options = {'REGISTER', 'UNDO'}
