@@ -18,8 +18,8 @@ from .MESH_OT_change_vtxselect_shapekey import MESH_OT_change_vtxslct_shapekey,V
 from .OBJECT_OT_vertex_groups_remove0 import OBJECT_OT_vertex_groups_weightZero_remove,VIEW3D_PT_CustomPanel_mugi_weightZero_remove
 from .OBJECT_OT_shape_keys_tiny_DEL import OBJECT_OT_remove_tiny_shape_keys,OBJECT_OT_clean_and_fix_mirror_X0,\
                                             VIEW3D_PT_CustomPanel_mugi_tiny_shape_key
-from .oji_Shape_Key_ST_Copy import OBJECT_OT_copy_shape_key_structure
-from .OBJECT_OT_mugi_Bone import OBJECT_OT_align_bones_line,OBJECT_OT_rename_multiple_chains_padded,VIEW3D_PT_CustomPanel_mugi_Bone_Panel
+from .oji_Shape_Key_ST_Copy import OBJECT_OT_copy_shape_key_structure,OBJECT_OT_invert_shape_key,OBJECT_OT_add_inverted_shape_key
+from .OBJECT_OT_mugi_Bonei import OBJECT_OT_align_bones_line,OBJECT_OT_rename_multiple_chains_padded,VIEW3D_PT_CustomPanel_mugi_Bone_Panel
 
 
 bl_info = {
@@ -136,6 +136,8 @@ classes = (
     VIEW3D_PT_CustomPanel_mugi_tiny_shape_key,
 
     OBJECT_OT_copy_shape_key_structure,
+    OBJECT_OT_invert_shape_key,
+    OBJECT_OT_add_inverted_shape_key,
 
     MUGI_OT_UpdateAddon,
     MUGI_AddonPreferences,
@@ -187,11 +189,15 @@ translation_dict = {
          ("*", "shape_key_X0") : "X=0強制",
          #shape_key_copy
          ("*", "Copy Shape Key Structure") : "シェイプキー構造コピー",
+         ("*", "Replacement_Shape_Key") : "選択シェイプキーとBasisを入替",
+         ("*", "Add_Invert_Shape_Key") : "選択シェイプキーを反転を追加",
+         
          #mugi_Bone
          ("*", "Align_selected_bones") : "選択ボーン整列",
          ("*", "bones_line") : "ボーン整列",
          ("*", "Rename_at_the_top_bone") : "先頭ボーンで改名",
          ("*", "bones_rename") : "リネーム",
+        
         
 
         },
@@ -220,7 +226,10 @@ def shape_key_menu_func(self, context):
     """シェイプキーのスペシャルメニューに追加する関数"""
     self.layout.operator(OBJECT_OT_copy_shape_key_structure.bl_idname,
         text=pgettext("Copy Shape Key Structure"), icon="COPYDOWN" )
-
+    self.layout.operator(OBJECT_OT_invert_shape_key.bl_idname,
+        text=pgettext("Replacement_Shape_Key"), icon="ARROW_LEFTRIGHT")
+    self.layout.operator(OBJECT_OT_add_inverted_shape_key.bl_idname,
+        text=pgettext("Add_Invert_Shape_Key"), icon="RECOVER_LAST")
 
 if __name__ == "__main__":
     register()
