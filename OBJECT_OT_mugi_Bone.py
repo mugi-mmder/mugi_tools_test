@@ -116,52 +116,35 @@ class OBJECT_OT_align_bones_line(bpy.types.Operator):
     
 
 class OBJECT_OT_rename_multiple_chains_padded(bpy.types.Operator):
-    """選択された接続チェーンを列ごとに連番リネーム（メッシュ→アーマチュア順でVGも更新）"""
-    bl_idname = "armature.rename_multiple_chains_padded"
-    bl_label = "接続チェーン連番リネーム（0埋め）"
+    """選択されたボーンチェーンを浮かせた状態で連番リネーム"""
+    bl_idname = "armature.rename_bone_chains_vglink"
+    bl_label = "チェーン連番リネーム（VG自動追従）"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
     def poll(cls, context):
-        if context.mode != 'EDIT_ARMATURE':
-            return False
-        obj = context.object
-        if not obj or obj.type != 'ARMATURE':
-            return False
-        bones = obj.data.edit_bones
-        selected = [b for b in bones if b.select]
-        return len(selected) >= 2
+        return (
+            context.mode == 'EDIT_ARMATURE' and
+            context.object and
+            context.object.type == 'ARMATURE' and
+            len([b for b in context.object.data.edit_bones if b.select]) >= 2
+        )
 
     def execute(self, context):
-        # アーマチュア取得
-        arm_obj = next((obj for obj in context.selected_objects if obj.type == 'ARMATURE'), None)
-        if arm_obj is None:
-            self.report({'ERROR'}, "アーマチュアが選択されていません")
-            return {'CANCELLED'}
-        bpy.context.view_layer.objects.active = arm_obj
-
+        arm_obj = context.object
         edit_bones = arm_obj.data.edit_bones
         selected = [b for b in edit_bones if b.select]
 
-        # メッシュオブジェクトを取得（アーマチュアモディファイアで関連づけられたもののみ）
-        mesh_objects = [
-            obj for obj in context.selected_objects
-            if obj.type == 'MESH'
-            and any(mod.type == 'ARMATURE' and mod.object == arm_obj for mod in obj.modifiers)
-        ]
-
-        # 親が非選択（＝列の先頭）のボーンから処理
         root_bones = [b for b in selected if not b.parent or b.parent not in selected]
         total_renamed = 0
 
         for chain_index, root in enumerate(root_bones):
-            # 接尾辞（.L/.R）と接頭辞（prefix-）
             suffix_match = re.search(r"(\.[LR])$", root.name)
             suffix = suffix_match.group(1) if suffix_match else ""
             base_name = re.sub(r"(\.[LR])$", "", root.name)
             prefix_match = re.match(r"(.*-)\d+$", base_name)
             if not prefix_match:
-                self.report({'WARNING'}, f"{root.name} は '名前-番号.L' の形式ではありません。スキップします")
+                self.report({'WARNING'}, f"{root.name} は '名前-番号.L' の形式ではありません。スキップ")
                 continue
             prefix = prefix_match.group(1)
 
@@ -175,35 +158,22 @@ class OBJECT_OT_rename_multiple_chains_padded(bpy.types.Operator):
 
             digits = 2 if len(chain) >= 11 else 1
 
-            # ボーン名 → 新ボーン名のマッピングを作成（仮名に変更する前に）
-            bone_rename_map = {}  # {old_name: new_name}
+            # 仮リネーム
             for i, bone in enumerate(chain):
-                index_str = f"{i:0{digits}d}"
-                new_name = f"{prefix}{index_str}{suffix}"
-                bone_rename_map[bone.name] = new_name
-
-            # 仮名に変更（衝突防止）
-            for i, bone in enumerate(chain):
-                bone.name = f"BONEkari_{i}_{chain_index}"
+                bone.name = f"TMP_{chain_index}_{i}"
 
             # 本リネーム
-            for bone in chain:
-                for old_name, new_name in bone_rename_map.items():
-                    if bone.name.startswith("BONEkari") and old_name not in [b.name for b in chain]:
-                        continue
-                    bone.name = new_name
-                    break
-
-            # 頂点グループも同様にリネーム
-            for mesh in mesh_objects:
-                for old_name, new_name in bone_rename_map.items():
-                    vg = mesh.vertex_groups.get(old_name)
-                    if vg:
-                        vg.name = new_name
+            for i, bone in enumerate(chain):
+                new_name = f"{prefix}{i:0{digits}d}{suffix}"
+                bone.name = new_name
 
             total_renamed += len(chain)
 
-        self.report({'INFO'}, f"{len(root_bones)} 列、{total_renamed} 本のボーンをリネームしました")
+        # ボーン名に応じて VG を自動追従させる（浮かせた状態）
+        bpy.ops.object.mode_set(mode='OBJECT')
+        bpy.ops.object.mode_set(mode='EDIT')
+
+        self.report({'INFO'}, f"{len(root_bones)}列、{total_renamed}本のボーンをリネームしました（VG追従）")
         return {'FINISHED'}
     
 
