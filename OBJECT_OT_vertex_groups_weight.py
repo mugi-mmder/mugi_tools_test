@@ -1,10 +1,14 @@
 # Copyright (c) 2022 mugi
 import bpy
 
-from bpy.types import Panel, UIList
+from bpy.types import Panel, UIList, Operator
 from bpy.props import *
 import bmesh
 from decimal import Decimal, ROUND_HALF_UP, ROUND_HALF_EVEN
+
+from mathutils import Vector
+
+
 
 translat = bpy.app.translations
 
@@ -162,13 +166,78 @@ class OBJECT_OT_vertex_groups_weight_round_the_weight(bpy.types.Operator):
         row.prop(self, "limit")
 
 
+class MESH_OT_vertex_weight_copy_normalize(Operator):
+    """Select nearest vertex, copy vertex weights and then normalize them"""
+    bl_idname = "mesh.vertex_weight_copy_normalize"
+    bl_label = "Select Nearest & Copy & Normalize"
+    bl_description = "Select nearest vertex, copy vertex weights and then normalize them in one action"
+    bl_options = {'REGISTER', 'UNDO'}
 
+    @classmethod
+    def poll(cls, context):
+        return (context.active_object is not None and
+                context.active_object.type == 'MESH' and
+                context.mode == 'EDIT_MESH')
+
+    def execute(self, context):
+        try:
+            obj = context.active_object
+            bm = bmesh.from_edit_mesh(obj.data)
+            
+            # 現在選択されている頂点を取得
+            selected_verts = [v for v in bm.verts if v.select]
+            
+            if not selected_verts:
+                self.report({'ERROR'}, "No vertices selected")
+                return {'CANCELLED'}
+            
+            # 最初に選択されている頂点を基準点とする
+            base_vert = selected_verts[0]
+            base_pos = base_vert.co
+            
+            # 一番近い頂点を探す（選択されていない頂点から）
+            nearest_vert = None
+            min_distance = float('inf')
+            
+            for vert in bm.verts:
+                if not vert.select:  # 選択されていない頂点のみ
+                    distance = (vert.co - base_pos).length
+                    if distance < min_distance:
+                        min_distance = distance
+                        nearest_vert = vert
+            
+            if nearest_vert is None:
+                self.report({'ERROR'}, "No unselected vertices found")
+                return {'CANCELLED'}
+            
+            # 最も近い頂点を追加選択（既存の選択は維持）
+            nearest_vert.select = True
+            
+            # メッシュを更新
+            bmesh.update_edit_mesh(obj.data)
+            
+            self.report({'INFO'}, f"Selected nearest vertex (distance: {min_distance:.3f})")
+            
+            # コピー実行
+            bpy.ops.object.vertex_weight_copy()
+            self.report({'INFO'}, "Vertex weights copied")
+            
+            # ノーマライズ実行
+            bpy.ops.object.vertex_weight_normalize_active_vertex()
+            self.report({'INFO'}, "Vertex weights normalized")
+            
+            self.report({'INFO'}, "Select Nearest & Copy & Normalize completed successfully")
+            return {'FINISHED'}
+            
+        except Exception as e:
+            self.report({'ERROR'}, f"Error during operation: {str(e)}")
+            return {'CANCELLED'}
 
 class VIEW3D_PT_CustomPanel_mugi(Panel):
     bl_space_type = "VIEW_3D"          # パネルを登録するスペース
     bl_region_type = "UI"              # パネルを登録するリージョン
     bl_category = "Item"               # パネルを登録するタブ名
-    bl_label = "round_the_weight"             # パネルのヘッダに表示される文字列
+    bl_label = "Weight Tools"             # パネルのヘッダに表示される文字列
     bl_options = {'DEFAULT_CLOSED'}
     @classmethod
     def poll(cls, context):
@@ -177,6 +246,17 @@ class VIEW3D_PT_CustomPanel_mugi(Panel):
     def draw(self, context):
         # row = 横並び : col = 縦並び : box = 囲む : split :分割
         layout = self.layout
-        row = layout.split(align=True)
-        row.label(text = "round_the_weight")
-        row.operator(OBJECT_OT_vertex_groups_weight_round_the_weight.bl_idname, text = translat.pgettext("round_the_weight"))
+        col = layout.column(align=True)  # 縦に積む
+
+
+        # 1段目
+        row = col.row(align=True)
+        split = row.split(factor=0.5, align=True)
+        split.label(text="vertex_weight_copy_normalize")
+        split.operator(MESH_OT_vertex_weight_copy_normalize.bl_idname,text="実行" )
+
+        # 2段目
+        row = col.row(align=True)
+        split = row.split(factor=0.5, align=True)  # 左右比率
+        split.label(text="round_the_weight")
+        split.operator(OBJECT_OT_vertex_groups_weight_round_the_weight.bl_idname,text="実行" )

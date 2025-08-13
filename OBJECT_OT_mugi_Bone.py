@@ -174,6 +174,94 @@ class OBJECT_OT_rename_multiple_chains_padded(bpy.types.Operator):
         return {'FINISHED'}
     
 
+
+#  ヘッド固定・選択ボーン平均化
+
+class OBJECT_OT_average_bone_length_head_fixed(bpy.types.Operator):
+    bl_idname = "armature.average_bone_length_head_fixed"
+    bl_label = "平均化（ヘッド固定）"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return (
+            context.mode == 'EDIT_ARMATURE' and
+            context.object and
+            context.object.type == 'ARMATURE' and
+            len([b for b in context.object.data.edit_bones if b.select]) >= 2
+        )
+
+    def execute(self, context):
+        obj = context.object
+        ebones = [b for b in obj.data.edit_bones if b.select]
+        lengths = [(b.tail - b.head).length for b in ebones]
+        avg_len = sum(lengths) / len(lengths)
+        for b in ebones:
+            direction = (b.tail - b.head).normalized()
+            b.tail = b.head + direction * avg_len
+        self.report({'INFO'}, f"平均長さ {avg_len:.3f} に設定しました（ヘッド固定）")
+        return {'FINISHED'}
+
+
+#  接続ボーン群ごと平均化（両端固定）
+
+class OBJECT_OT_average_connected_bone_length(bpy.types.Operator):
+    bl_idname = "armature.average_connected_bone_length_groups"
+    bl_label = "接続ごと平均化（両端固定）"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return (
+            context.mode == 'EDIT_ARMATURE' and
+            context.object and
+            context.object.type == 'ARMATURE' and
+            len([b for b in context.object.data.edit_bones if b.select]) >= 2
+        )
+
+    def execute(self, context):
+        obj = context.object
+        ebones = {b.name: b for b in obj.data.edit_bones if b.select}
+        visited = set()
+
+        def get_chain(start_bone):
+            chain = [start_bone]
+            b = start_bone
+            while b.parent and b.use_connect and b.parent.name in ebones and b.parent not in chain:
+                chain.insert(0, b.parent)
+                b = b.parent
+            b = start_bone
+            while True:
+                children = [c for c in b.children if c.use_connect and c.name in ebones]
+                if len(children) == 1:
+                    chain.append(children[0])
+                    b = children[0]
+                else:
+                    break
+            return chain
+
+        for b in list(ebones.values()):
+            if b.name in visited:
+                continue
+            chain = get_chain(b)
+            for cb in chain:
+                visited.add(cb.name)
+            if len(chain) < 2:
+                continue
+            start_head = chain[0].head.copy()
+            end_tail = chain[-1].tail.copy()
+            total_dist = (end_tail - start_head).length
+            avg_len = total_dist / len(chain)
+            direction = (end_tail - start_head).normalized()
+            current_pos = start_head.copy()
+            for cb in chain:
+                cb.head = current_pos
+                cb.tail = cb.head + direction * avg_len
+                current_pos = cb.tail
+
+        self.report({'INFO'}, "接続ボーンごとに平均長さへ調整しました（両端固定）")
+        return {'FINISHED'}
+
     
 class VIEW3D_PT_CustomPanel_mugi_Bone_Panel(Panel):
     bl_space_type = "VIEW_3D"          # パネルを登録するスペース
@@ -198,3 +286,13 @@ class VIEW3D_PT_CustomPanel_mugi_Bone_Panel(Panel):
       row = layout.row(align=True)
       row.label(text="Rename_at_the_top_bone")
       row.operator(OBJECT_OT_rename_multiple_chains_padded.bl_idname, text = translat.pgettext("bones_rename"))
+
+     # test2 + ボタン2
+      row = layout.row(align=True)
+      row.label(text="average_bone_length")
+      row.operator(OBJECT_OT_average_bone_length_head_fixed.bl_idname, text = translat.pgettext("head_fixed"))
+
+     # test2 + ボタン2
+      row = layout.row(align=True)
+      row.label(text="averaged_per_connection")
+      row.operator(OBJECT_OT_average_connected_bone_length.bl_idname, text = translat.pgettext("fixed_at_both_ends"))

@@ -10,7 +10,8 @@ from bpy.types import AddonPreferences, Operator
 from bpy.props import StringProperty
 from bpy.app.translations import pgettext
 
-from .OBJECT_OT_vertex_groups_weight import OBJECT_OT_vertex_groups_weight_round_the_weight,VIEW3D_PT_CustomPanel_mugi
+from .OBJECT_OT_vertex_groups_weight import OBJECT_OT_vertex_groups_weight_round_the_weight,\
+                                            MESH_OT_vertex_weight_copy_normalize,VIEW3D_PT_CustomPanel_mugi
 from .VIEW3D_PT_CustomPanel import VIEW3D_PT_3D_cursor_Panel_mugi,OBJECT_OT_cursor_to_XlocZero,OBJECT_OT_PoseReset_OBJmode
 from .TEXTURE_OT_BRUSH import TEXTURE_OT_BRUSHSize,TEXTURE_OT_BRUSHSize_Ajust,TEXTURE_PT_BrushPanel_mugi
 from .mmd_cm_trans import Prop_mmd_cm_trans_setting,OBJECT_OT_mmd_cm_trans_maxmin,VIEW3D_PT__mmd_cm_trans_mugi
@@ -19,7 +20,8 @@ from .OBJECT_OT_vertex_groups_remove0 import OBJECT_OT_vertex_groups_weightZero_
 from .OBJECT_OT_shape_keys_tiny_DEL import OBJECT_OT_remove_tiny_shape_keys,OBJECT_OT_clean_and_fix_mirror_X0,\
                                             VIEW3D_PT_CustomPanel_mugi_tiny_shape_key
 from .oji_Shape_Key_ST_Copy import OBJECT_OT_copy_shape_key_structure,OBJECT_OT_invert_shape_key,OBJECT_OT_add_inverted_shape_key
-from .OBJECT_OT_mugi_Bone import OBJECT_OT_align_bones_line,OBJECT_OT_rename_multiple_chains_padded,VIEW3D_PT_CustomPanel_mugi_Bone_Panel
+from .OBJECT_OT_mugi_Bone import OBJECT_OT_align_bones_line,OBJECT_OT_rename_multiple_chains_padded,VIEW3D_PT_CustomPanel_mugi_Bone_Panel,\
+                                OBJECT_OT_average_bone_length_head_fixed,OBJECT_OT_average_connected_bone_length
 
 
 bl_info = {
@@ -111,6 +113,7 @@ class MUGI_AddonPreferences(AddonPreferences):
 classes = (
     # コレクションクラスのインポートの順番に注意
     OBJECT_OT_vertex_groups_weight_round_the_weight,
+    MESH_OT_vertex_weight_copy_normalize,
     VIEW3D_PT_CustomPanel_mugi,
 
     VIEW3D_PT_3D_cursor_Panel_mugi,
@@ -144,6 +147,8 @@ classes = (
 
     OBJECT_OT_align_bones_line,
     OBJECT_OT_rename_multiple_chains_padded,
+    OBJECT_OT_average_bone_length_head_fixed,
+    OBJECT_OT_average_connected_bone_length,
     VIEW3D_PT_CustomPanel_mugi_Bone_Panel
 
      )
@@ -197,7 +202,10 @@ translation_dict = {
          ("*", "bones_line") : "ボーン整列",
          ("*", "Rename_at_the_top_bone") : "先頭ボーンで改名",
          ("*", "bones_rename") : "リネーム",
-        
+         ("*", "average_bone_length") : "選択ボーン平均化",
+         ("*", "head_fixed") : "ヘッド固定",
+         ("*", "averaged_per_connection") : "接続ボーン平均化",
+         ("*", "fixed_at_both_ends") : "両端固定",
         
 
         },
