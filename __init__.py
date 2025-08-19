@@ -158,6 +158,7 @@ translation_dict = {
     "ja_JP" :
         {#OBJECT_OT_vertex_groups_weight
          ("*", "round_the_weight") : "ウェイトを丸める",
+         ("*", "copy_weights_from_nearby_vertices") : "近傍頂点からウェイトコピー",
          ("*", "clean_weights") : "値以下のｳｪｲﾄ削除",
          ("*", "Round_weights_of_selected_objects") : "選択オブジェクトのウェイト丸め＆正規化",
          #VIEW3D_PT_CustomPanel

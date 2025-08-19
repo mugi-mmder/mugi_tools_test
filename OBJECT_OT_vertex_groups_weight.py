@@ -13,52 +13,49 @@ from mathutils import Vector
 translat = bpy.app.translations
 
 
-def get_armature_parent(obj):
-    """オブジェクトの親チェーンをたどり、アーマチュアオブジェクトを返す。"""
-    parent = obj.parent
-    while parent:
-        if parent.type == 'ARMATURE':
-            return parent
-        parent = parent.parent
-    return None
-
 class OBJECT_OT_vertex_groups_weight_round_the_weight(bpy.types.Operator):
     bl_idname = "object.vertex_groups_round_the_weight_mugitest"
     bl_label = "round_the_weight"
     bl_description = "選択メッシュオブジェクトのウェイトの0.01以下を丸めて正規化"
     bl_options = {'REGISTER', 'UNDO'}
 
-    limit : FloatProperty(default = 0.01,min = 0.0,max = 1.0,step = 1,
+    limit : FloatProperty(default = 0.01, min = 0.0, max = 1.0, step = 1,
                           name = "clean_weights",
                           description = "clean vertex_group weights")
 
-
+    @staticmethod
+    def get_armature_parent(obj):
+        """オブジェクトの親チェーンをたどり、アーマチュアオブジェクトを返す。"""
+        parent = obj.parent
+        while parent:
+            if parent.type == 'ARMATURE':
+                return parent
+            parent = parent.parent
+        return None
 
     @classmethod
     def poll(cls, context):
-        if bpy.context.mode == 'OBJECT'           : # objectモードで実行させるのでモード確認
-            for slctobj in bpy.context.selected_objects:
-                if slctobj.type in {'MESH'}:        #　選択オブジェクトにメッシュがあるか？
-                    if slctobj.parent != None:      #　ペアレントがあるか？ウェイトボーンチェック前の簡易チェック
-                            return True
-        else:
-            return False
+        if context.mode == 'OBJECT':           # objectモードで実行させるのでモード確認
+            for slctobj in context.selected_objects:
+                if slctobj.type == 'MESH':     # 選択オブジェクトにメッシュがあるか？
+                    if cls.get_armature_parent(slctobj) is not None:  # 親階層にアーマチュアがあるかチェック
+                        return True
+        return False
 
     def execute(self, context):
-        obj = bpy.context.active_object
+        original_active = bpy.context.active_object  # 元のアクティブオブジェクトを保存
         slct_obj = bpy.context.selected_objects
-        #print(slct_obj)
         
         slctobjlist = []    # ウェイトいじるリスト
-        nonlist =[]         # はじいたオブジェクトリスト
+        nonlist = []        # はじいたオブジェクトリスト
 
         for slctobj in bpy.context.selected_objects:
-            if slctobj.type in {'MESH'}:                                #　選択オブジェクトからメッシュを取り出してリスト化
-                if len(slctobj.vertex_groups) != 0 and slctobj.parent != None and\
-                    'ARMATURE'  in slctobj.parent.type:                 #　頂点グループがあるか,ペアレントがあるかチェック 
-                        prt_bones = [b.name for b in slctobj.parent.pose.bones] #　アーマチュアからボーンリスト作成 
-                        vtx_groups =[v.name for v in slctobj.vertex_groups]     #　オブジェクトから頂点グループリスト作成 
-                        if len(set(prt_bones) & set(vtx_groups)) != 0:          #　ウェイトボーンがあるかチェック 
+            if slctobj.type in {'MESH'}:                                # 選択オブジェクトからメッシュを取り出してリスト化
+                armature_parent = self.get_armature_parent(slctobj)          # 親階層からアーマチュアを取得
+                if len(slctobj.vertex_groups) != 0 and armature_parent is not None:  # 頂点グループとアーマチュアがあるかチェック
+                        prt_bones = [b.name for b in armature_parent.pose.bones]  # アーマチュアからボーンリスト作成 
+                        vtx_groups = [v.name for v in slctobj.vertex_groups]     # オブジェクトから頂点グループリスト作成 
+                        if len(set(prt_bones) & set(vtx_groups)) != 0:          # ウェイトボーンがあるかチェック 
                             slctobjlist.append(slctobj)
                         else:
                             nonlist.append(slctobj)           
@@ -66,96 +63,98 @@ class OBJECT_OT_vertex_groups_weight_round_the_weight(bpy.types.Operator):
                     nonlist.append(slctobj)
             else:
                 nonlist.append(slctobj)
-        if  not len(slctobjlist) == 0:
+                
+        if not len(slctobjlist) == 0:
             print("========  slctobjlist  ==========\n", slctobjlist ,"\n----------------------\n")
             print("========  nonlist  ==========\n", nonlist ,"\n----------------------\n")
             self.report({'INFO'}, "Round_weights_of_selected_objects") 
 
-            for listobj in slctobjlist:    #　リストから一個ずつメッシュオブジェクトの取り出し
-                # print("listobj--->",listobj)
-                print("test--->",listobj.name)
-                bpy.context.view_layer.objects.active = listobj     #　リストから一個ずつメッシュオブジェクトを選択
+            for current_obj in slctobjlist:    # リストから一個ずつメッシュオブジェクトの取り出し
+                print("Processing object:", current_obj.name)
+                bpy.context.view_layer.objects.active = current_obj     # リストから一個ずつメッシュオブジェクトを選択
 
-                has_armature = any(mod.type == 'ARMATURE' for mod in obj.modifiers)
+                # アーマチュアモディファイアのチェック（現在のオブジェクトで）
+                has_armature = any(mod.type == 'ARMATURE' for mod in current_obj.modifiers)
                 if not has_armature:
-                    self.report({'INFO'}, "アーマチュアモディファイアが付いていません")
-                    return {'CANCELLED'}
-                
+                    self.report({'INFO'}, f"{current_obj.name}にアーマチュアモディファイアが付いていません")
+                    continue  # 次のオブジェクトに進む
 
-                bpy.ops.object.mode_set(mode='EDIT', toggle = False)  #　EDITmodeにはいって全頂点選択
+                # 現在のオブジェクトのアーマチュア親とボーンリストを取得
+                armature_parent = self.get_armature_parent(current_obj)
+                if armature_parent is None:
+                    self.report({'INFO'}, f"{current_obj.name}にアーマチュア親が見つかりません")
+                    continue
+                    
+                current_prt_bones = [b.name for b in armature_parent.pose.bones]
+
+                bpy.ops.object.mode_set(mode='EDIT', toggle = False)  # EDITmodeにはいって全頂点選択
                 bpy.ops.mesh.select_all(action='SELECT')
                 bpy.ops.object.mode_set(mode='OBJECT', toggle = False)
 
- 
-
-                #ごみｳｪｲﾄｸﾘｰﾝ -> ｳｪｲﾄ数4制限 -> 再度ｸﾘｰﾝ -> 変形ｳｪｲﾄのみ正規化 -> 0.01単位で量子化 -> 再度正規化(微小端数) -> 0.01単位で量子化
+                # ウェイト処理
                 try:
-                  bpy.ops.object.vertex_group_clean(group_select_mode='BONE_DEFORM',                  # 指定値以下の変形ウェイトをクリーン
-                                                    limit = self.limit, keep_single=True)
-                except TypeError as e:        # エラーメッセージをチェックして適切な情報を表示
-                       if "enum \"BONE_DEFORM\" not found" in str(e):
-                            self.report({'INFO'}, "なんかエラー。もっかい試してみて")
-                            return {'CANCELLED'}
-                       else:
-                            # その他のTypeErrorの場合は再発生させる
-                         raise e  
-                bpy.ops.object.vertex_group_limit_total(group_select_mode='BONE_DEFORM', limit = 4)   # 変形ウェイトを4つに制限
-                bpy.ops.object.vertex_group_clean(group_select_mode='BONE_DEFORM',                    # 指定値以下の変形ウェイトをクリーン
+                    bpy.ops.object.vertex_group_clean(group_select_mode='BONE_DEFORM',
+                                                        limit = self.limit, keep_single=True)
+                except TypeError as e:
+                    if "enum \"BONE_DEFORM\" not found" in str(e):
+                        self.report({'INFO'}, "なんかエラー。もっかい試してみて")
+                        return {'CANCELLED'}
+                    else:
+                        raise e  
+                        
+                bpy.ops.object.vertex_group_limit_total(group_select_mode='BONE_DEFORM', limit = 4)
+                bpy.ops.object.vertex_group_clean(group_select_mode='BONE_DEFORM',
                                                     limit = self.limit, keep_single=True)             
-                bpy.ops.object.vertex_group_quantize(group_select_mode='BONE_DEFORM', steps = 100)    # 0.01単位で量子化
+                bpy.ops.object.vertex_group_quantize(group_select_mode='BONE_DEFORM', steps = 100)
                 bpy.ops.object.vertex_group_normalize_all(group_select_mode='BONE_DEFORM',
-                                                                lock_active=False)                    # 変形ウェイトの正規化,ｱｸﾃｨﾌﾞﾛｯｸは掛けない
-                bpy.ops.object.vertex_group_clean(group_select_mode='BONE_DEFORM',                    # 一回目で端数がでる場合があるので二回目突入
+                                                                lock_active=False)
+                bpy.ops.object.vertex_group_clean(group_select_mode='BONE_DEFORM',
                                                     limit = self.limit, keep_single=True)
-                bpy.ops.object.vertex_group_quantize(group_select_mode='BONE_DEFORM', steps = 100)    # 正規化時に微小端数がでるのを利用して整える
+                bpy.ops.object.vertex_group_quantize(group_select_mode='BONE_DEFORM', steps = 100)
 
-               # ～～～↓↓↓↓～～たまに処理できない頂点がでたので手動で一回丸める～～～↓↓↓↓～～ #
+                # 手動で丸める処理（現在のオブジェクトを使用）
                 ctrl_bmsh = bmesh.new()
-                ctrl_bmsh.from_mesh(obj.data)
+                ctrl_bmsh.from_mesh(current_obj.data)  # 現在のオブジェクトのメッシュを使用
                 bm_Df_Lay = ctrl_bmsh.verts.layers.deform.active 
-                print("bm_Df_Lay---->",bm_Df_Lay)
+                print("bm_Df_Lay---->", bm_Df_Lay)
 
                 if not bm_Df_Lay:
                     print("not bm_Df_Lay!!!")
-                    return {'CANCELLED'}
+                    ctrl_bmsh.free()
+                    continue  # 次のオブジェクトに進む
 
-                for vm_vert in ctrl_bmsh.verts:   # 選択中のアクティブオブジェクトの頂点ウェイト（変形）取得する
-                        # print("=====================" , vm_vert.index , "=======================")
-                        # print("vm_vert---->",vm_vert)
-                        # print("vm_vert[bm_Df_Lay].items()---->","len=",len(vm_vert[bm_Df_Lay].items()),"bm_Df_Lay:",bm_Df_Lay,"item:",vm_vert[bm_Df_Lay].items())
-                        i = 0
-                        last_v_ind = None  # 最後に見たv_indを記録
-                        for v_ind, v_wieht in vm_vert[bm_Df_Lay].items():   
-                            # print("v_ind---->",v_ind,"    v_wieht---->",v_wieht)      
-                            if obj.vertex_groups[v_ind].name in prt_bones:                # 選択中の頂点ウェイト（変形）取得する
-                                # print(obj.vertex_groups[v_ind].name,"Weight==",v_wieht)
-                                # quan = str(v_wieht)
-                                
-                                quan = Decimal(str(v_wieht)).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
-                                vm_vert[bm_Df_Lay][v_ind] = float(quan)
-                                i = i + vm_vert[bm_Df_Lay][v_ind]                         # 丸め時切り捨て、切り上げで1じゃなくなってないかcheck用
-                                last_v_ind = v_ind                                        # ここで記録
-                                # print(obj.vertex_groups[v_ind].name,"Weight==",vm_vert[bm_Df_Lay][v_ind])
-                        i == round(i,2)                                                 
-                        def_i = 1 - i
-                        # print((abs(def_i) < 0.001), " TOTAL == ", i,"difference== ",def_i)
-                        if (abs(def_i) > 0.001) and (last_v_ind is not None) and (last_v_ind in vm_vert[bm_Df_Lay]):   # 合計が1±0.001以内かcheck（内部的に微小端数は出る）
-                           vm_vert[bm_Df_Lay][last_v_ind] = (vm_vert[bm_Df_Lay][last_v_ind] + def_i)     # 1じゃないなら最後にチェックしたボーンに誤差分吸収
+                for vm_vert in ctrl_bmsh.verts:
+                    i = 0
+                    last_v_ind = None
+                    
+                    for v_ind, v_weight in vm_vert[bm_Df_Lay].items():   
+                        # 現在のオブジェクトの頂点グループを使用
+                        if v_ind < len(current_obj.vertex_groups) and current_obj.vertex_groups[v_ind].name in current_prt_bones:
+                            quan = Decimal(str(v_weight)).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
+                            vm_vert[bm_Df_Lay][v_ind] = float(quan)
+                            i += vm_vert[bm_Df_Lay][v_ind]
+                            last_v_ind = v_ind
 
-                ctrl_bmsh.to_mesh(obj.data)
-                #print("ctrl_bmsh--->",ctrl_bmsh)
-                ctrl_bmsh.free()                                                            # bmshを破棄
+                    # 正規化チェックと修正
+                    i = round(i, 2)
+                    def_i = 1 - i
+                    if (abs(def_i) > 0.001) and (last_v_ind is not None) and (last_v_ind in vm_vert[bm_Df_Lay]):
+                       vm_vert[bm_Df_Lay][last_v_ind] = (vm_vert[bm_Df_Lay][last_v_ind] + def_i)
 
-
-                # ～～～↑↑↑↑～～たまに処理できない頂点がでたので手動で一回丸める～～～↑↑↑↑～～ #
-                print("test--->",listobj.name,"--->end")
+                ctrl_bmsh.to_mesh(current_obj.data)  # 現在のオブジェクトのメッシュに適用
+                ctrl_bmsh.free()
+                print("Processing completed:", current_obj.name)
 
         else:
-            print("erorr",obj)
+            self.report({'WARNING'}, "処理可能なオブジェクトがありません")
+            
+        # 元のアクティブオブジェクトを復元
+        if original_active:
+            bpy.context.view_layer.objects.active = original_active
+            
         return {'FINISHED'}
     
-            
-    def invoke(self, context, event):# ポップアップ表示
+    def invoke(self, context, event):  # ポップアップ表示
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
 
@@ -167,10 +166,10 @@ class OBJECT_OT_vertex_groups_weight_round_the_weight(bpy.types.Operator):
 
 
 class MESH_OT_vertex_weight_copy_normalize(Operator):
-    """Select nearest vertex, copy vertex weights and then normalize them"""
+
     bl_idname = "mesh.vertex_weight_copy_normalize"
-    bl_label = "Select Nearest & Copy & Normalize"
-    bl_description = "Select nearest vertex, copy vertex weights and then normalize them in one action"
+    bl_label = "copy_weights_from_nearby_vertices"
+    bl_description = "選択頂点を非選択の最近傍頂点からウェイトコピー＆正規化"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
@@ -184,55 +183,67 @@ class MESH_OT_vertex_weight_copy_normalize(Operator):
             obj = context.active_object
             bm = bmesh.from_edit_mesh(obj.data)
             
-            # 現在選択されている頂点を取得
+            # 選択頂点と非選択頂点
             selected_verts = [v for v in bm.verts if v.select]
-            
+            unselected_verts = [v for v in bm.verts if not v.select]
+
             if not selected_verts:
                 self.report({'ERROR'}, "No vertices selected")
                 return {'CANCELLED'}
-            
-            # 最初に選択されている頂点を基準点とする
-            base_vert = selected_verts[0]
-            base_pos = base_vert.co
-            
-            # 一番近い頂点を探す（選択されていない頂点から）
-            nearest_vert = None
-            min_distance = float('inf')
-            
-            for vert in bm.verts:
-                if not vert.select:  # 選択されていない頂点のみ
-                    distance = (vert.co - base_pos).length
-                    if distance < min_distance:
-                        min_distance = distance
-                        nearest_vert = vert
-            
-            if nearest_vert is None:
-                self.report({'ERROR'}, "No unselected vertices found")
+            if not unselected_verts:
+                self.report({'ERROR'}, "No unselected vertices to copy from")
                 return {'CANCELLED'}
+
+
+
+            # 処理対象の頂点を記録
+            processed_verts = []
             
-            # 最も近い頂点を追加選択（既存の選択は維持）
-            nearest_vert.select = True
+            for base_vert in selected_verts:
+                # 一番近い非選択頂点を探す
+                nearest_vert = min(unselected_verts, key=lambda u: (u.co - base_vert.co).length)
+
+                # コピー方向を逆に：nearestがアクティブ、baseがターゲット
+                base_vert.select = True
+                nearest_vert.select = True
+                bm.select_history.clear()
+                bm.select_history.add(nearest_vert)
+                
+                # メッシュ更新
+                bmesh.update_edit_mesh(obj.data)
+                
+                # コピー（アクティブ = nearest、選択 = base）
+                bpy.ops.object.vertex_weight_copy()
+                
+                # 処理済み頂点として記録
+                processed_verts.append(base_vert)
+                
+                # 選択解除
+                base_vert.select = False
+                nearest_vert.select = False
+
+            # 処理済み頂点を全選択
+            for vert in processed_verts:
+                vert.select = True
             
-            # メッシュを更新
+            # メッシュ更新
             bmesh.update_edit_mesh(obj.data)
             
-            self.report({'INFO'}, f"Selected nearest vertex (distance: {min_distance:.3f})")
+            # デフォームボーンウェイトのみを一括正規化
+            bpy.ops.object.vertex_group_normalize_all(group_select_mode='BONE_DEFORM')
             
-            # コピー実行
-            bpy.ops.object.vertex_weight_copy()
-            self.report({'INFO'}, "Vertex weights copied")
-            
-            # ノーマライズ実行
-            bpy.ops.object.vertex_weight_normalize_active_vertex()
-            self.report({'INFO'}, "Vertex weights normalized")
-            
-            self.report({'INFO'}, "Select Nearest & Copy & Normalize completed successfully")
+            # 選択解除
+            for vert in processed_verts:
+                vert.select = False
+
+            bmesh.update_edit_mesh(obj.data)
+            self.report({'INFO'}, f"Copied and normalized deform weights for {len(selected_verts)} vertices")
             return {'FINISHED'}
-            
+
         except Exception as e:
             self.report({'ERROR'}, f"Error during operation: {str(e)}")
             return {'CANCELLED'}
-
+            
 class VIEW3D_PT_CustomPanel_mugi(Panel):
     bl_space_type = "VIEW_3D"          # パネルを登録するスペース
     bl_region_type = "UI"              # パネルを登録するリージョン
@@ -250,13 +261,11 @@ class VIEW3D_PT_CustomPanel_mugi(Panel):
 
 
         # 1段目
-        row = col.row(align=True)
-        split = row.split(factor=0.5, align=True)
-        split.label(text="vertex_weight_copy_normalize")
-        split.operator(MESH_OT_vertex_weight_copy_normalize.bl_idname,text="実行" )
+
+        col.label(text="copy_weights_from_nearby_vertices")
+        col.operator(MESH_OT_vertex_weight_copy_normalize.bl_idname,text="実行" )
 
         # 2段目
-        row = col.row(align=True)
-        split = row.split(factor=0.5, align=True)  # 左右比率
-        split.label(text="round_the_weight")
-        split.operator(OBJECT_OT_vertex_groups_weight_round_the_weight.bl_idname,text="実行" )
+
+        col.label(text="round_the_weight")
+        col.operator(OBJECT_OT_vertex_groups_weight_round_the_weight.bl_idname,text="実行" )
