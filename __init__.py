@@ -27,7 +27,7 @@ from .OBJECT_OT_mugi_Bone import OBJECT_OT_align_bones_line,OBJECT_OT_rename_mul
 bl_info = {
     "name": "test mugiTOOLs",
     "author": "mugi",
-    "version": (1, 1.1),
+    "version": (1, 1.2),
     "blender": (3, 1, 0),
     "location": "VIEW3D > Sidebar",
     "description": "実験用のむぎの遊び場.",
